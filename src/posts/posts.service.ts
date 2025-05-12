@@ -1,82 +1,52 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostModel } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class PostsService {
-  postList: PostModel[] = [
-    {
-      id: 1,
-      title: 'First Post',
-      content: 'This is the content of the first post.',
-      authorId: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: 2,
-      title: 'Second Post',
-      content: 'This is the content of the second post.',
-      authorId: 2,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: 3,
-      title: 'Third Post',
-      content: 'This is the content of the third post.',
-      authorId: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
+  constructor(
+    @InjectRepository(PostModel)
+    private readonly postsRepository: Repository<PostModel>,
+  ) {}
 
-  findAll(): PostModel[] {
-    return this.postList;
+  async findAll(): Promise<PostModel[]> {
+    return await this.postsRepository.find();
   }
 
-  findOne(id: number): PostModel {
-    console.log('findOne', typeof id);
-    const post = this.postList.find((post) => post.id === id);
-    if (!post) {
-      throw new NotFoundException();
-    }
-    return post;
+  async findOne(id: number): Promise<PostModel> {
+    return await this.postsRepository
+      .findOneOrFail({ where: { id } })
+      .catch(() => {
+        throw new NotFoundException();
+      });
   }
 
-  createPost(dto: CreatePostDto): PostModel {
-    const newPost: PostModel = {
-      id: (this.postList[this.postList.length - 1]?.id ?? 0) + 1,
+  async createPost(dto: CreatePostDto): Promise<PostModel> {
+    const newPost = this.postsRepository.create({
       title: dto.title,
       content: dto.content,
       authorId: dto.authorId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.postList.push(newPost);
-    return newPost;
+    });
+    return await this.postsRepository.save(newPost);
   }
 
-  updatePost(id: number, dto: CreatePostDto): PostModel {
-    const postIndex = this.postList.findIndex((post) => post.id === +id);
-    if (postIndex === -1) {
-      throw new NotFoundException();
-    }
-    const updatedPost: PostModel = {
-      ...this.postList[postIndex],
-      ...dto,
-      updatedAt: new Date(),
-    };
-    this.postList[postIndex] = updatedPost;
-    return updatedPost;
+  async updatePost(id: number, dto: CreatePostDto): Promise<PostModel> {
+    await this.findOne(id);
+
+    await this.postsRepository.update(id, {
+      title: dto.title,
+      content: dto.content,
+      authorId: dto.authorId,
+    });
+
+    return await this.findOne(id);
   }
 
-  deletePost(id: number): string {
-    const postIndex = this.postList.findIndex((post) => post.id === +id);
-    if (postIndex === -1) {
-      throw new NotFoundException();
-    }
-    this.postList.splice(postIndex, 1);
+  async deletePost(id: number): Promise<string> {
+    await this.findOne(id);
+    await this.postsRepository.delete(id);
     return '삭제 완료';
   }
 }
