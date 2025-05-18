@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostModel } from './posts/entities/post.entity';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -14,10 +14,11 @@ import { PostModel } from './posts/entities/post.entity';
       username: process.env.DB_USERNAME ?? 'postgres',
       password: process.env.DB_PASSWORD ?? 'postgres',
       database: process.env.DB_NAME ?? 'postgres',
-      entities: [PostModel],
+      entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
     PostsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

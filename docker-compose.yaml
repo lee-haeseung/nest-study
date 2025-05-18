@@ -1,5 +1,5 @@
 services:
-  prostgres:
+  postgres:
     image: postgres:latest
     restart: always
     volumes:

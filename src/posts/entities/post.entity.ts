@@ -1,7 +1,10 @@
+import { UserModel } from 'src/users/entities/users.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -17,7 +20,7 @@ export class PostModel {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'int', default: 1 })
   authorId: number;
 
   @CreateDateColumn({ type: 'timestamp' })
@@ -31,4 +34,10 @@ export class PostModel {
 
   // @Column({ type: 'boolean', default: false })
   // important: boolean;
+
+  @ManyToOne(() => UserModel, (user) => user.posts, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'authorId' })
+  author: UserModel;
 }
