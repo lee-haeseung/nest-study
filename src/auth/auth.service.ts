@@ -15,9 +15,75 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
   ) {}
+
   /**
-   * TODO
+   * 토큰 사용 방식
    *
+   * 1) 사용자가 로그인, 회원가입을 진행하면 accessToken과 refreshToken을 발급받는다.
+   * 2) 로그인할 때는 Basic 토큰과 함께 요청을 보낸다. (Basic 토큰은 'email:password' 형태로 Base64 인코딩된 값)
+   * 3) 아무나 접근할 수 없는 정보를 접근할 때는 accessToken을 Header에 담아 요청을 보낸다.
+   * 4) 토큰과 요청을 함께 받은 서버는 토큰 검증을 통해 현재 요청을 보낸 사용자가 누구인지 알 수 있다.
+   * 5) 만료된 토큰은 사용 불가하다.
+   * 6) 토큰이 만료되면 refreshToken을 사용하여 새로운 accessToken을 발급받을 수 있다.
+   */
+
+  /**
+   * Header로부터 토큰을 받을 때
+   * {authorization: 'Basic <Base64 인코딩된 email:password>'}
+   * {authorization: 'Bearer <accessToken>'}
+   */
+  async extractTokenFromHeader(header: string, isBearer: boolean = true) {
+    const splitToken = header.split(' ');
+    if (splitToken.length !== 2) {
+      throw new UnauthorizedException('Invalid token format');
+    }
+
+    const tokenType = splitToken[0];
+    const token = splitToken[1];
+
+    if (isBearer && tokenType !== 'Bearer') {
+      throw new UnauthorizedException('Invalid token type');
+    } else if (!isBearer && tokenType !== 'Basic') {
+      throw new UnauthorizedException('Invalid token type');
+    }
+    return token;
+  }
+
+  /**
+   * 디코드 후 반환
+   */
+  decodeBasicToken(base64String: string): { email: string; password: string } {
+    const decoded = Buffer.from(base64String, 'base64').toString('utf-8');
+
+    const split = decoded.split(':');
+    if (split.length !== 2) {
+      throw new UnauthorizedException('Invalid Basic token format');
+    }
+
+    const [email, password] = split;
+    return { email, password };
+  }
+
+  verifyToken(token: string) {
+    return this.jwtService.verify(token, {
+      secret: JWT_SECRET,
+    });
+  }
+
+  rotateToken(token: string, isRefreshToken: boolean = false) {
+    const decoded = this.verifyToken(token);
+
+    if (decoded.type !== 'refresh') {
+      throw new UnauthorizedException('Refresh token required');
+    }
+
+    return this.signToken(
+      { email: decoded.email, id: decoded.id },
+      isRefreshToken,
+    );
+  }
+
+  /**
    * 1. registerWithEmail
    * - email, nickname, password를 바탕으로 사용자 생성
    *
