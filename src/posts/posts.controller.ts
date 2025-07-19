@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -21,7 +22,8 @@ export class PostsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<PostModel> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<PostModel> {
+    console.log(typeof id);
     return await this.postsService.findOne(id);
   }
 
