@@ -1,15 +1,25 @@
-import { Body, Controller, Post, Headers } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Headers,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   PasswordMaxLengthPipe,
   PasswordMinLengthPipe,
 } from 'src/auth/pipe/password.pipe';
+import { BasicTokenGuard } from './guard/basic-token.guard';
+import { RefreshTokenGuard } from './guard/bearer-toekn.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('refresh/access')
+  @UseGuards(RefreshTokenGuard)
   async refreshAccessToken(@Headers('authorization') rawToken: string) {
     // 토큰 추출
     const token = await this.authService.extractTokenFromHeader(rawToken);
@@ -18,6 +28,7 @@ export class AuthController {
   }
 
   @Post('refresh/refresh')
+  @UseGuards(RefreshTokenGuard)
   async refreshRefreshToken(@Headers('authorization') rawToken: string) {
     // 토큰 추출
     const token = await this.authService.extractTokenFromHeader(rawToken);
@@ -26,7 +37,13 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Headers('authorization') rawToken: string) {
+  @UseGuards(BasicTokenGuard)
+  async login(
+    @Headers('authorization') rawToken: string,
+    @Request() request: any,
+  ) {
+    console.log(request);
+
     // 토큰 추출
     const token = await this.authService.extractTokenFromHeader(
       rawToken,
