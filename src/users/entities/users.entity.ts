@@ -1,12 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { UserRole } from '../enums/role.enum';
 import { PostModel } from 'src/posts/entities/post.entity';
+import { BaseModel } from 'src/common/entities/base-model.entity';
 
 @Entity()
-export class UserModel {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class UserModel extends BaseModel {
   @Column({
     type: 'varchar',
     length: 20,

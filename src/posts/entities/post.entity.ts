@@ -1,3 +1,4 @@
+import { BaseModel } from 'src/common/entities/base-model.entity';
 import { UserModel } from 'src/users/entities/users.entity';
 import {
   Column,
@@ -5,15 +6,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('post')
-export class PostModel {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class PostModel extends BaseModel {
   @Column({ type: 'varchar', length: 255 })
   title: string;
 
