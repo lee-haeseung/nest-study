@@ -7,10 +7,13 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostModel } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
+import { BearerTokenGuard } from 'src/auth/guard/bearer-toekn.guard';
+import { User } from 'src/users/decorator/user.decorator';
 
 @Controller('posts')
 export class PostsController {
@@ -28,7 +31,14 @@ export class PostsController {
   }
 
   @Post()
-  async createPost(@Body() dto: CreatePostDto): Promise<PostModel> {
+  @UseGuards(BearerTokenGuard)
+  async createPost(
+    @User('id') userId: number,
+    @Body()
+    dto: CreatePostDto,
+  ): Promise<PostModel> {
+    const authorId = userId;
+    dto.authorId = authorId;
     return await this.postsService.createPost(dto);
   }
 
